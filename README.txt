@@ -1,6 +1,9 @@
-Title of publication: Networks of Comorbid Childhood Psychopathology
+Title of publication: Investigating Psychopathological Comorbidity in Childhood and Adolescence using Network Analysis
 
 3RD YEAR UNDERGRADUATE PSYCHOLOGY FINAL RESEARCH DISSERTATION
+
+All code within this project folder was written by the author of this disseration ("Auclstudent").
+
 
 PROJECT DESCRIPTION
 -------------------
@@ -13,7 +16,7 @@ The following programs were used for this project:
 
 (1)	R
 (2)	SPSS
-(3)     Rmarkdown
+(3) Rmarkdown
 
 The project folder is organised as follows:
 
@@ -33,8 +36,7 @@ The files are chronologically ordered, numbered from 0 to 3, which corresponds t
 2019_Dissertation/Analysis/Settings
 Contains supplementary code used in analysis. flowerpot.R is used to filter the network by co-morbid symptom nodes. NodelistT1.csv and NodelistT2.csv contain legends used in the script to select and label data from the root ALSPAC data file. 
 
-NOTE: In compliance with data protection and participant confidentiality guidelines, data
-is not included within this project folder. 
+NOTE: In compliance with data protection and participant confidentiality guidelines, data is not included within this project folder. 
 
 
  
