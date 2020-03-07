@@ -1,0 +1,937 @@
+---
+title: "Exploring the underlying Structures of Childhood Psychopathology"
+author: "Auclstudent"
+date: "26/11/2019"
+---
+
+```{r setup, include=FALSE }
+
+knitr::opts_chunk$set(echo = TRUE)
+#For Loading on External Drive - Change this to the location of your package files
+source(self)
+
+.libPaths(LIBPATH)
+#Unhash the following comments to install relevant packages for this script
+ install.packages("bannerCommenter")
+ install.packages(foreign)
+ install.packages(psych)
+ install.packages(readr)
+ install.packages(plotly)
+ install.packages(car)
+ install.packages("ppcor")
+ install.packages(corrplot)
+ install.packages("pracma")
+ install.packages("qgraph")
+ install.packages("parcor")
+ install.packages("Matrix")
+ install.packages("psych")
+ install.packages("dplyr")
+ install.packages("ggplot2")
+ install.packages("bootnet")
+ install.packages("networktools")
+ install.packages("EGAnet")
+ install.packages("igraph")
+ install.packages("rmarkdown")
+ install.packages("formattable")
+
+library(bannerCommenter) #used solely for pretty boxes. Not necessary for analysis or processing
+library(foreign)
+library(psych)
+library(readr)
+library(plotly)
+library(car)
+library("ppcor")
+library(corrplot)
+library("pracma")
+library("qgraph")
+library("parcor")
+library("Matrix")
+library("psych")
+library("dplyr")
+library("ggplot2")
+library("bootnet")
+library("networktools")
+library("EGAnet")
+library("igraph")
+library("rmarkdown")
+library("tnet")
+library("formattable")
+library(kableExtra)
+
+```
+
+
+## Information on this script:
+
+This script is intended to conduct a network analysis investigation
+on selected measures of the ALSPAC Birth Cohort Study. The script is
+designed to allow flexibilty in adding/removing variables into and out
+of the network model. A novel feature added to this script is the 
+separation of network connections by their weight in the network, and
+and the capability to highlight only certain key nodes which bridge
+categories or latent factors.
+
+This script was created as part of a Dissertation project 
+"Exploring the Underlying Structures of Comorbidity in Childhood 
+Psychopathology: A Network Analysis of Symptom Relationships"   
+
+This code was written by the author (auclstudent),
+in partial fulfilment of the requirements for the degree of Psychology 
+(BSc Hons).
+
+Please contact the UCL Department of Psychology and Language Sciences, 
+or the author if you wish to use this code. 
+Unauthorised reproduction is not permitted.
+
+DISCLAIMER: This code was written as a learning exercise and is still
+in early development. Be sure to cut redundant code where necessary.
+
+Please Note: This script operates on data that has already been processed and cleaned. 
+             Please refer to the full version of this script for the data cleaning process.
+             
+
+
+```{r echo=FALSE,warning=F,message=F}
+
+##...................................
+## File location definitions
+##...................................
+
+nodefile=nodefileT1 # Holds location of file containing ALSPAC nodes and category labels for TimePoint 1
+
+nodefile2=nodefileT2 # Holds location of file containing ALSPAC nodes and category labels for TimePoint 2
+
+# IMPORTANT: Nodes listed in Nodefile and label files must be listed in parallel 
+
+## default: for running as source
+NF=nodefile
+splitby=T1index #REMEMBER TO CHANGE ME :( 
+
+##...................................
+## Importing Datasets
+##...................................
+
+rawdataT1<-read.csv(T1_ALSPAC_Processed)[2:60]
+rawdataT2<-read.csv(T2_ALSPAC_Processed)[2:60]
+
+nodelist<-read.csv(NF)
+
+# Collate all nodes in nodefile (e.g kr123)
+allnodes<-as.vector(nodelist$node)
+
+# Collate all categories of node (e.g "Hyperactivity")
+allitems<-as.vector(nodelist$topic)
+groups<-allitems
+
+# Load parrallel list with individual labels for each node 
+Names<-nodelist$label
+
+```
+# Descriptive statistics T1
+```{r echo=FALSE,warning=F}
+renamednodes<-colnames(rawdataT1)
+DescSummaryT1<-NULL
+
+# The following for loop creates a pretty table containing descriptive stats for all nodes in the network.
+
+for(variable in 1:length(rawdataT1)){
+  
+  name<-renamednodes[variable]
+  
+  mean<-summary(rawdataT1[variable])[4]
+  mean<-as.numeric(strsplit(mean,":")[[1]][2])
+  mean<-toString(mean)
+  
+  sd<-sd(rawdataT1[[variable]],na.rm=TRUE)
+  sd<-format(round(sd,3),nsmall = 3)
+  sd<-toString(sd)
+  
+  mean<-paste0(mean,"(",sd,")")
+  
+  PP<-summary(rawdataT1[variable])[7]
+  PP<-as.numeric(strsplit(PP,":")[[1]][2])
+  PP=nrow(rawdataT1)-PP
+  
+  variable<-c(name,mean,PP)
+  
+  variable<-data.frame(Node=variable[1],Mean=variable[2],N=variable[3])
+  DescSummaryT1<-rbind(DescSummaryT1,variable)
+}
+
+DescSummaryT1<-cbind(DescSummaryT1$Node,as.data.frame(Names),DescSummaryT1$Mean,DescSummaryT1$N)
+colnames(DescSummaryT1)<-c("Node","Names","Mean(SD)","N")
+
+DescSummaryT1 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+
+```
+# Descriptive statistics T2
+```{r echo=FALSE,warning=F}
+renamednodes<-colnames(rawdataT2)
+DescSummaryT2<-NULL
+
+# The following for loop creates a pretty table containing descriptive stats for all nodes in the network.
+
+for(variable in 1:length(rawdataT2)){
+  
+  name<-renamednodes[variable]
+  
+  mean<-summary(rawdataT2[variable])[4]
+  mean<-as.numeric(strsplit(mean,":")[[1]][2])
+  mean<-toString(mean)
+  
+  sd<-sd(rawdataT2[[variable]],na.rm=TRUE)
+  sd<-format(round(sd,3),nsmall = 3)
+  sd<-toString(sd)
+  
+  mean<-paste0(mean,"(",sd,")")
+  
+  PP<-summary(rawdataT2[variable])[7]
+  PP<-as.numeric(strsplit(PP,":")[[1]][2])
+  PP=nrow(rawdataT2)-PP
+  
+  variable<-c(name,mean,PP)
+  
+  variable<-data.frame(Node=variable[1],Mean=variable[2],N=variable[3])
+  DescSummaryT2<-rbind(DescSummaryT2,variable)
+}
+
+DescSummaryT2<-cbind(DescSummaryT2$Node,as.data.frame(Names),DescSummaryT2$Mean,DescSummaryT2$N)
+colnames(DescSummaryT2)<-c("Node","Names","Mean(SD)","N")
+
+DescSummaryT2 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+```
+
+## Research Question 1: Latent Factor Vs DSM comparison
+
+# Results: Time Point 1
+```{r echo=FALSE,warning=F,message=F}
+
+## Results for Time Point 1 ##
+## -------------------------------------------------------------------------------------------- ##
+
+# The function below plots the network of symptoms according to their DSM CATEGORIES 
+
+# The function Estimatenetwork is used as a wrapping function.
+# Pairwise deletion is specified
+# the EBICglasso method is used to estimate the network 
+
+resultsT1<-estimateNetwork(rawdataT1,default = "EBICglasso", threshold= T,missing="pairwise") 
+
+# -------------------------------- #
+
+# The function below plots an equivalent network of the same symptoms, but generates categories using the walktrap clustering method - EGA
+
+# inside the package EGA, the "glasso" model already uses the Extended BIC as a minimization criterion
+
+EGA.graphT1<-EGA(data=rawdataT1,model="glasso",plot.EGA = F)
+
+# Following this the groups extracted by the EGA network are sorted and placed into a seperate string for later use.
+
+LgroupsT1<-c()
+for(i in EGA.graphT1$wc){
+  i<-toString(i)
+  i<-paste("factor",i)
+  LgroupsT1=c(LgroupsT1,i)}
+
+
+```
+
+Symptom Network: Categorised by DSM categories
+```{r echo=FALSE,warning=F,message=F, fig.width=10, fig.height=6}
+
+# Network plot of DSM network
+
+# Custom colours are used. 
+
+# layout="spring" instructs qgraph to use the Frutherman-reingold algorithim to organise the network plot.
+
+DSM_Network_Plot_T1<-qgraph(resultsT1$graph,layout = "spring", labels = colnames(data), 
+              groups = groups,
+              details=T, minimum=0.1,cut=0.2,
+              width = 6,
+              height = 5,
+              color = c("orangered","orange","springgreen3","slateblue","skyblue","red3",
+                        "seagreen","sandybrown","violetred")
+              )
+```
+
+Symptom Network: Latent Categories determined by EGA Clustering_Walktrap Algorithm
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+# Network plot of EGA network
+
+# Custom colours are used. 
+
+# layout="spring" instructs qgraph to use the Frutherman-reingold algorithim to organise the network plot.
+
+EGA_Network_Plot_T1<-qgraph(resultsT1$graph,layout = "spring", labels = colnames(data), 
+              groups = LgroupsT1,
+              details=T, minimum=0.1,cut=0.2,
+              width = 6,
+              height = 5,
+               color = c("springgreen3","slateblue","violetred","orangered","sandybrown","red3","orange")
+              )
+```
+
+# Results: Time Point 2
+```{r echo=FALSE,warning=F,message=F}
+
+## Results for Time Point 2 ##
+## -------------------------------------------------------------------------------------------- ##
+
+# The function below plots the network of symptoms according to their DSM CATEGORIES at TIME 2
+
+# The function Estimatenetwork is used as a wrapping function.
+# Pairwise deletion is specified
+# the EBICglasso method is used to estimate the network 
+
+resultsT2<-estimateNetwork(rawdataT2,default = "EBICglasso", threshold= T,missing="pairwise") 
+
+# -------------------------------- #
+
+# The function below plots an equivalent network of the same symptoms, but generates categories using the walktrap clustering method - EGA
+
+# inside the package EGA, the "glasso" model already uses the Extended BIC as a minimization criterion
+
+EGA.graphT2<-EGA(data=rawdataT2,model="glasso",plot.EGA = F)
+
+# Following this the groups extracted by the EGA network are sorted and placed into a seperate string for later use.
+
+LgroupsT2<-c()
+for(i in EGA.graphT2$wc){
+  i<-toString(i)
+  i<-paste("factor",i)
+  LgroupsT2=c(LgroupsT2,i)}
+```
+
+Symptom Network: Categorised by DSM categories
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+# Network Plot of DSM network at Time 2. 
+
+# Custom colours are used
+
+# layout is fitted to the network structure at time 1 using layout = "..." 
+
+DSM_Network_Plot_T2<-qgraph(resultsT2$graph, labels = colnames(data), 
+              groups = groups,
+              details=T, minimum=0.1,cut=0.2,
+              width = 6,
+              height = 5,
+              layout= DSM_Network_Plot_T1$layout, # Force T1 & T2 graphs to have identical layouts
+              color = c("orangered","orange","springgreen3","slateblue","skyblue","red3",
+                        "seagreen","sandybrown","violetred")
+              )
+```
+
+Symptom Network: Latent Categories determined by EGA Clustering_Walktrap Algorithm
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+# Network Plot of EGA network at Time 2. 
+
+# Custom colours are used
+
+# layout is fitted to the network structure at time 1 using layout = "..." 
+
+EGA_Network_Plot_T2<-qgraph(resultsT2$graph, labels = colnames(data), 
+              groups = LgroupsT2,
+              details=T, minimum=0.1,cut=0.2,
+              width = 6,
+              height = 5,
+              layout= DSM_Network_Plot_T1$layout, # Force T1 & T2 graphs to have identical layouts
+              color = c("slateblue","violetred","sandybrown","red3","orangered","springgreen3","seagreen","orange")
+              )
+```
+
+Network Descriptives T1+T2
+```{r echo=FALSE,warning=F,message=F,fig.width=25,fig.height=9}
+
+# Other than grouping, the structure of the EGA network and DSM network are identical.
+
+# Centrality statistics are derived from the DSM network, stored in resultsT1 and resultsT2
+
+CentralityT1<-centrality_auto(resultsT1)
+T1Between<-CentralityT1[["node.centrality"]][["Betweenness"]]
+T1Between<-scale(T1Between)        # Scales centrality statistic to mean = 0, SD = 1 by default
+T1Between<-as.data.frame(T1Between)
+
+CentralityT2<-centrality_auto(resultsT2)
+T2Between<-CentralityT2[["node.centrality"]][["Betweenness"]]
+T2Between<-scale(T2Between)        # Scales centrality statistic to mean = 0, SD = 1 by default
+T2Between<-as.data.frame(T2Between)
+
+table<-T1Between
+table<-cbind(colnames(resultsT1$graph),table)
+table<-cbind(table,c(rep("T1",length(colnames(resultsT1$graph)))))
+colnames(table)<-c("node","betweenness","timepoint")
+table1<-table
+
+table2<-T2Between
+table2<-cbind(colnames(resultsT1$graph),table2)
+table2<-cbind(table2,c(rep("T2",length(colnames(resultsT2$graph)))))
+colnames(table2)<-c("node","betweenness","timepoint")
+
+table<-rbind(table1,table2) # both tables are connected into one long table and plotted using ggplot
+
+ggplot(table, aes(x=node, y=betweenness,fill=timepoint),height=10,width=10) + 
+  geom_bar(stat = "identity",position=position_dodge()) + theme(axis.text = element_text(size=19),axis.text.x = element_text(angle=-90)) 
+
+
+ggsave("plt.png", width = 25, height = 9, dpi = 120)
+
+
+
+```
+
+Creating plot of mean betweenness centrality per disorder category:
+
+```{r, echo=FALSE,warning=F,message=F}
+# Generating a summary of betweenness values for comparison with above plots 
+
+table1<-as.data.frame(T1Between)
+table1<-cbind(colnames(resultsT1$graph),table1)
+table1<-cbind(table1,c(rep("T1",length(colnames(resultsT1$graph)))))
+colnames(table1)<-c("node","betweenness","timepoint")
+
+table2<-as.data.frame(T2Between)
+table2<-cbind(colnames(resultsT2$graph),table2)
+table2<-cbind(table2,c(rep("T2",length(colnames(resultsT1$graph)))))
+colnames(table2)<-c("node","betweenness","timepoint")
+
+Hmean<-mean(table1[1:5,2])
+Hsd<-sd(table1[1:5,2])
+
+IMmean<-mean(table1[6:9,2])
+IMsd<-sd(table1[6:9,2])
+
+INmean<-mean(table1[10:18,2])
+INsd<-sd(table1[10:18,2])
+
+SPAmean<-mean(table1[19:24,2])
+SPAsd<-sd(table1[19:24,2])
+
+SAmean<-mean(table1[25:30,2])
+SAsd<-sd(table1[25:30,2])
+
+Gmean<-mean(table1[31:37,2])
+Gsd<-sd(table1[31:37,2])
+
+Cmean<-mean(table1[38:45,2])
+Csd<-sd(table1[38:45,2])
+
+Dmean<-mean(table1[46:50,2])
+Dsd<-sd(table1[46:50,2])
+
+Emean<-mean(table1[51:59,2])
+Esd<-sd(table1[51:59,2])
+
+allmeans<-rbind(Hmean,IMmean,INmean,SPAmean,SAmean,Gmean,Cmean,Dmean,Emean)
+allsds<-rbind(Hsd,IMsd,INsd,SPAsd,SAsd,Gsd,Csd,Dsd,Esd)
+
+summary1<-as.data.frame(cbind(c(rep("T1",9))))
+rownames(summary1)<-c("H","IM","IN","SPA","SA","G","C","D","E")
+summary1<-cbind(rownames(summary1),summary1)
+summary1<-cbind(summary1,as.numeric(allmeans),as.numeric(allsds))
+colnames(summary1)<-c("category","timepoint","mean","Sd")
+
+Hmean<-mean(table2[1:5,2])
+Hsd<-sd(table2[1:5,2])
+
+IMmean<-mean(table2[6:9,2])
+IMsd<-sd(table2[6:9,2])
+
+INmean<-mean(table2[10:18,2])
+INsd<-sd(table2[10:18,2])
+
+SPAmean<-mean(table2[19:24,2])
+SPAsd<-sd(table2[19:24,2])
+
+SAmean<-mean(table2[25:30,2])
+SAsd<-sd(table2[25:30,2])
+
+Gmean<-mean(table2[31:37,2])
+Gsd<-sd(table2[31:37,2])
+
+Cmean<-mean(table2[38:45,2])
+Csd<-sd(table2[38:45,2])
+
+Dmean<-mean(table2[46:50,2])
+Dsd<-sd(table2[46:50,2])
+
+Emean<-mean(table2[51:59,2])
+Esd<-sd(table2[51:59,2])
+
+allmeans<-rbind(Hmean,IMmean,INmean,SPAmean,SAmean,Gmean,Cmean,Dmean,Emean)
+allsds<-rbind(Hsd,IMsd,INsd,SPAsd,SAsd,Gsd,Csd,Dsd,Esd)
+
+summary2<-as.data.frame(cbind(c(rep("T2",9))))
+rownames(summary2)<-c("H","IM","IN","SPA","SA","G","C","D","E")
+summary2<-cbind(rownames(summary2),summary2)
+summary2<-cbind(summary2,as.numeric(allmeans),as.numeric(allsds))
+colnames(summary2)<-c("category","timepoint","mean","Sd")
+
+CategorySummary<-rbind(summary1,summary2)
+CategorySummary<-as.data.frame(CategorySummary)
+
+ggplot(CategorySummary, aes(x=category, y=mean, fill=timepoint)) + 
+  geom_bar(stat="identity", color="black",position = position_dodge())+ 
+  geom_errorbar(aes(ymin=mean-Sd, ymax=mean+Sd), width=.2,
+                 position=position_dodge(.9)) + theme(axis.text = element_text(size=15),axis.text.x = element_text(angle=0)) 
+
+```
+
+
+Network Descriptives calculated using Expected Influence
+
+```{r echo=FALSE,warning=F,message=F,fig.width=25,fig.height=9}
+
+table1=NULL
+table2=NULL
+
+
+bridgeout1<-bridge(resultsT1$graph,communities = allitems)
+EI2network1<-as.data.frame(scale(bridgeout1$`Bridge Expected Influence (2-step)`))
+ScaledBetween1<-scale(T1Between,center = 0)
+
+table1<-cbind(colnames(resultsT1$graph),EI2network1,ScaledBetween1,c(rep("T1",length(colnames(resultsT1$graph)))))
+colnames(table1)<-c("node","EI2","Betweenness","timepoint")
+
+bridgeout2<-bridge(resultsT2$graph,communities=allitems)
+EI2network2<-as.data.frame(scale(bridgeout2$`Bridge Expected Influence (2-step)`))
+ScaledBetween2<-scale(T2Between,center = 0)
+
+table2<-cbind(colnames(resultsT2$graph),EI2network2,ScaledBetween2,c(rep("T2",length(colnames(resultsT2$graph)))))
+colnames(table2)<-c("node","EI2","Betweenness","timepoint")
+
+table<-rbind(table1,table2)
+
+
+
+table1$name <- factor(table1$node, levels = table1$node[order(table1$EI2)])
+table2$name <- factor(table2$node, levels = table2$node[order(table2$EI2)])
+
+
+table1sorted <- table1[order(-table1$EI2),]
+table2sorted <- table2[order(-table2$EI2),]
+
+
+
+ggplot(data=table1,aes(x=name,group=1)) + 
+  geom_point(aes(y=EI2),shape=2) +
+  geom_point(aes(y=Betweenness)) +
+  geom_line(aes(y=EI2),colour="red") +
+  geom_line(aes(y=Betweenness),colour="blue") +
+  theme(axis.text = element_text(size=15),axis.text.x = element_text(angle=-90)) + 
+  ylab("Centrality Score") +
+  xlab("Node Name") +
+  ggtitle("A. Betweenness Centrality and Two-Step Expected Influence (EI2) per Symptom node at Time point 1") +
+  theme(axis.text = element_text(size=15),
+        axis.text.x = element_text(angle=-90),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20),
+        plot.title = element_text(size=20))
+
+
+ggplot(data=table2,aes(x=name,group=1)) + 
+  geom_point(aes(y=EI2),shape=2) +
+  geom_point(aes(y=Betweenness)) +
+  geom_line(aes(y=EI2),colour="red") +
+  geom_line(aes(y=Betweenness),colour="blue") +
+  theme(axis.text = element_text(size=15),axis.text.x = element_text(angle=-90)) + 
+  ylab("Centrality Score") +
+  xlab("Node Name") +
+  ggtitle("B. Betweenness Centrality and Two-Step Expected Influence (EI2) per Symptom node at Time point 2") +
+  theme(axis.text = element_text(size=15),
+        axis.text.x = element_text(angle=-90),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20),
+        plot.title = element_text(size=20))
+
+
+table %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+```
+
+
+Network Descriptive Comparisons
+
+```{r echo=FALSE,warning=F,message=F}
+
+tNETresults<-tnet::as.tnet(resultsT1$graph) #tnet is used as a way to easily match the node column names to their centrality values:
+#their presentation of information in their output is more readable
+
+#Calculating node average Betweenness
+Betweeness<-as.data.frame(tnet::betweenness_w(tNETresults))#Betweenness calculation
+rownames(Betweeness)<-resultsT1[["labels"]]
+
+#Calculating node average Closeness
+Closeness<-as.data.frame(tnet::closeness_w(tNETresults))#Closeness calculation
+rownames(Closeness)<-resultsT1[["labels"]]
+
+#Calculating the sum scores for each column (node) within the data.
+frequencytable<-colSums(rawdataT1,na.rm=T)      #NOTE:The name Frequency table is *wrong* it is actually a weighted sum score per node
+frequencytable<-as.data.frame(frequencytable)
+
+#Calculating Descriptive Stats
+
+NetworkBetweenAvg<-sum(Betweeness$betweenness)/resultsT1$nNode
+NetworkBetweenAvg<-toString(NetworkBetweenAvg)
+
+NetworkBetweenSD<-sd(Betweeness$betweenness)
+NetworkBetweenSD<-toString(NetworkBetweenSD)
+
+NetworkBetweenAvg<-paste0(NetworkBetweenAvg,"(",NetworkBetweenSD,")")
+
+
+NetworkCloseAvg<-sum(Closeness$closeness)/resultsT1$nNode
+NetworkCloseAvg<-toString(NetworkCloseAvg)
+
+NetworkcloseSD<-sd(Closeness$closeness)
+NetworkcloseSD<-toString(NetworkcloseSD)
+
+NetworkCloseAvg<-paste0(NetworkCloseAvg,"(",NetworkcloseSD,")")
+
+
+totalNodeStrength<-sum(abs(resultsT1$graph))
+averageNodeStrength<-totalNodeStrength/resultsT1$nNode
+averageNodeStrength<-toString(averageNodeStrength)
+
+SDedgeWeight<-sd(abs(resultsT1$graph))
+SDedgeWeight<-toString(SDedgeWeight)
+
+averageNodeStrength<-paste0(averageNodeStrength,"(",SDedgeWeight,")")
+
+NetworkAverageT1<-c(NetworkBetweenAvg,NetworkCloseAvg,averageNodeStrength)
+
+Descriptives<-c("Betweenness","Closeness","Edge Strength")
+
+NetDescriptives1<-as.data.frame(Descriptives)
+NetDescriptives1<-cbind(NetDescriptives1,as.data.frame(NetworkAverageT1))
+
+##########################################################################
+
+
+tNETresults<-tnet::as.tnet(resultsT2$graph) #tnet is used as a way to easily match the node column names to their centrality values:
+#their presentation of information in their output is more readable
+
+#Calculating node average Betweenness
+Betweeness<-as.data.frame(tnet::betweenness_w(tNETresults))#Betweenness calculation
+rownames(Betweeness)<-resultsT2[["labels"]]
+
+#Calculating node average Closeness
+Closeness<-as.data.frame(tnet::closeness_w(tNETresults))#Closeness calculation
+rownames(Closeness)<-resultsT2[["labels"]]
+
+#Calculating the sum scores for each column (node) within the data.
+frequencytable<-colSums(rawdataT2,na.rm=T)      #NOTE:The name Frequency table is *wrong* it is actually a weighted sum score per node
+frequencytable<-as.data.frame(frequencytable)
+
+#Calculating Descriptive Stats
+
+NetworkBetweenAvg<-sum(Betweeness$betweenness)/resultsT2$nNode
+NetworkBetweenAvg<-toString(NetworkBetweenAvg)
+
+NetworkBetweenSD<-sd(Betweeness$betweenness)
+NetworkBetweenSD<-toString(NetworkBetweenSD)
+
+NetworkBetweenAvg<-paste0(NetworkBetweenAvg,"(",NetworkBetweenSD,")")
+
+
+NetworkCloseAvg<-sum(Closeness$closeness)/resultsT2$nNode
+NetworkCloseAvg<-toString(NetworkCloseAvg)
+
+NetworkcloseSD<-sd(Closeness$closeness)
+NetworkcloseSD<-toString(NetworkcloseSD)
+
+NetworkCloseAvg<-paste0(NetworkCloseAvg,"(",NetworkcloseSD,")")
+
+
+totalNodeStrength<-sum(abs(resultsT2$graph))
+averageNodeStrength<-totalNodeStrength/resultsT2$nNode
+averageNodeStrength<-toString(averageNodeStrength)
+
+SDedgeWeight<-sd(abs(resultsT2$graph))
+SDedgeWeight<-toString(SDedgeWeight)
+
+averageNodeStrength<-paste0(averageNodeStrength,"(",SDedgeWeight,")")
+
+NetworkAverageT2<-c(NetworkBetweenAvg,NetworkCloseAvg,averageNodeStrength)
+
+Descriptives<-c("Betweenness","Closeness","Edge Strength")
+
+
+NetDescriptives2<-cbind(as.data.frame(NetworkAverageT2))
+
+t<-cbind(NetDescriptives1,NetDescriptives2)
+
+t %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+```
+
+Smallworld Estimation
+
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+# Estimation not used in final report. 
+
+# Cannot get this to work without taking 100,000 years. Currently ignored pending further use in later projects.
+
+set.seed(100)
+#smallworldness(resultsT1)
+
+#smallworldness(resultsT2)
+
+```
+
+
+
+## Research Question 2: Investigating Comorbid Symptoms connecting disorders
+
+
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6} 
+
+source('E:/MyRSpace/2019_Dissertation/analysis/settings/flowerplot.R')
+
+# NOTE: This section requires flowerplot() function to be defined:
+
+# flowerplot() is a custom function created for the analysis within this study only. Please refer to the .txt file in
+# "E:\MyRSpace\2019_Dissertation\analysis\settings" for documentation on the operation and use of this function.
+
+# Results @Time point 1
+Heat1<-flowerplot(resultsT1$graph,seperator=".",unrelated_edge_colour = "grey",graphtitle = "Heatmap of Significant Connections at Time Point 1",graphlayout = DSM_Network_Plot_T1$layout, n=resultsT1$nPerson)
+
+# Results @Time point 2
+Heat2<-flowerplot(resultsT2$graph,seperator=".",unrelated_edge_colour = "grey",graphtitle = "Heatmap of Significant Connections at Time Point 2",graphlayout = DSM_Network_Plot_T1$layout, n=resultsT2$nPerson)
+
+```
+
+Seperation of disorder symptoms by DSM category: Contrasting connections between Internalising, Externalising and compulsive disorders:
+
+Time Point 1
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6} 
+
+H=colnames(resultsT1$graph)[1:5]
+IM=colnames(resultsT1$graph)[6:9]
+IN=colnames(resultsT1$graph)[10:18]
+E=colnames(resultsT1$graph)[51:59]
+
+SPA=colnames(resultsT1$graph)[19:24]
+SA=colnames(resultsT1$graph)[25:30]
+G=colnames(resultsT1$graph)[31:37]
+D=colnames(resultsT1$graph)[46:50]
+
+C=colnames(resultsT1$graph)[38:45]
+
+Internalising=c(SPA,SA,G,D)
+Externalising=c(E,IM,IN,H)
+
+# NOTE: This section requires flowerplot() function to be defined:
+# -----------------------------------------------------------------------------------------------------------------------
+# Results @Time point 1
+
+F1.c<-flowerplot(resultsT1$graph,seperator = ".",C,graphlayout="groups",qgraphgroups = groups, overridecolour = TRUE, graphtitle = "Compulsions T1", n=resultsT1$nPerson)
+
+# Results @time point 2
+
+F2.c<-flowerplot(resultsT2$graph,seperator = ".",C,graphlayout="groups",qgraphgroups = groups, overridecolour = TRUE, graphtitle = "Compulsions T2", n = resultsT2$nPerson)
+
+
+
+```
+
+
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+F1.I<-flowerplot(resultsT1$graph,seperator = ".",Internalising,graphlayout="groups",qgraphgroups = groups,overridecolour=TRUE,graphtitle = "Internalising T1",n=resultsT1$nPerson)
+
+F1.E<-flowerplot(resultsT1$graph,seperator = ".",Externalising,graphlayout="groups",qgraphgroups = groups,overridecolour=TRUE,graphtitle = "Externalising T1",n=resultsT1$nPerson)
+
+F2.I<-flowerplot(resultsT2$graph,seperator = ".",Internalising,graphlayout="groups",qgraphgroups = groups,overridecolour=TRUE,graphtitle = "Internalising T2",n=resultsT2$nPerson)
+
+F2.E<-flowerplot(resultsT2$graph,seperator = ".",Externalising,graphlayout="groups",qgraphgroups = groups,overridecolour=TRUE,graphtitle = "Exteranlising T2",n=resultsT2$nPerson)
+
+```
+
+Further Investigation of Compulsive Nodes only
+
+Time 1
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+
+# A seperate connection splot is created for each node within the network. 
+
+# NOTE: this analysis is not included within the final dissertation report. 
+
+C.1<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.1",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.1 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.2<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.2",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.2 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.3<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.3",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.3 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.4<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.4",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.4 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.5<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.5",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.5 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.6<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.6",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.6 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.7<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.7",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+C.7 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.8<-flowerplot(resultsT1$graph,seperator = ".",
+             "C.8",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+C.8 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+
+```
+
+Time 2
+
+
+```{r echo=FALSE,warning=F,message=F,fig.width=10, fig.height=6}
+C.1<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.1",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.1 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.2<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.2",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.2 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.3<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.3",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.3 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.4<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.4",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.4 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.5<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.5",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.5 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.6<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.6",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+
+C.6 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.7<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.7",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+C.7 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+C.8<-flowerplot(resultsT2$graph,seperator = ".",
+             "C.8",graphlayout="groups",
+             qgraphgroups = groups, 
+             overridecolour = TRUE, 
+             n = resultsT1$nPerson)
+C.8 %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("condensed"),full_width = F,position="left")
+
+
+```
+

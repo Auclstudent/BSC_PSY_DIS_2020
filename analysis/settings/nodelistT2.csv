@@ -1,0 +1,60 @@
+node,topic,label
+tb7510,Hyperactivity,"Compared to other children of her age, does she often fidget "
+tb7511,Hyperactivity,Is it hard for her to stay sitting down for long?
+tb7512,Hyperactivity,Does she run or climb about when she shouldn’t?
+tb7513,Hyperactivity,Does she find it hard to play or take part in other leisure activities without making a noise?
+tb7514,Hyperactivity,If she is rushing about does she find it hard to calm down when someone asks her to do so ?
+tb7520,Impulsivity,Does she often blurt out an answer before she has heard the question properly?
+tb7521,Impulsivity,Is it hard for her to wait her turn?
+tb7522,Impulsivity,Does she often butt in on other people’s conversation or games?
+tb7523,Impulsivity,Does she often go on talking even if she has been asked to stop or no one is listening?
+tb7530,Inattention,Does she often make careless mistakes or fail to pay attention to what she is supposed to be doing?
+tb7531,Inattention,Does she often seem to lose interest in what she is doing?
+tb7532,Inattention,Does she often not listen to what people are saying to her?
+tb7533,Inattention,Does she often not finish a job properly?
+tb7534,Inattention,Is it often hard for her to get herself organised to do something?
+tb7535,Inattention,"Does she often try to get out of things she would have to think about, such as homework?"
+tb7536,Inattention,Does she often lose things she needs for school or PE?
+tb7537,Inattention,Is she easily distracted?
+tb7538,Inattention,Is she often forgetful?
+tb4022,SeparationAnxiety,Has she often not wanted to go to school in case something nasty happened whilst she was there to a person she is attached to?
+tb4023,SeparationAnxiety,Has she worried about sleeping alone?
+tb4024,SeparationAnxiety,"Has she come out of her bedroom at night to check on, or to sleep near any of her caretakers?"
+tb4025,SeparationAnxiety,Has she worried about sleeping in a strange place? 
+tb4026,SeparationAnxiety,Has she been afraid of being alone in a room at home without one of the people she is attached to?
+tb4027,SeparationAnxiety,Has she had repeated nightmares or bad dreams about being separated from any of these people?
+tb5010,SocialAnxiety,Degree to which child was afraid of meeting new people in past month
+tb5011,SocialAnxiety,Degree to which child was afraid of meeting lots of people in past month
+tb5012,SocialAnxiety,Degree to which child was afraid of speaking in class in past month
+tb5013,SocialAnxiety,Degree to which child was afraid of reading out loud before others in past month
+tb5014,SocialAnxiety,Degree to which child was afraid of writing in front of others in past month
+tb5015,SocialAnxiety,Degree to which child was afraid of eating in front of others in past month
+tb6520,GAD,Does she worry a lot about Past behaviour
+tb6521,GAD,"School work, homework or tests"
+tb6522,GAD,Examinations
+tb6523,GAD,Disasters
+tb6524,GAD,Her own health
+tb6525,GAD,Bad things happening to others
+tb6526,GAD,The future
+tb6010,Compulsions,Frequency child has repeatedly cleaned self excessively in past month
+tb6011,Compulsions,Frequency child has repeatedly taken other special measures to avoid dirt in past month
+tb6012,Compulsions,Frequency child has repeatedly checked things in past month
+tb6013,Compulsions,child has repeatedly performed repeated actions in past month
+tb6014,Compulsions,Frequency child has repeatedly touched things/people in particular ways in past month
+tb6015,Compulsions,Frequency child has repeatedly arranged things symmetrically in past month
+tb6016,Compulsions,Frequency child has repeatedly counted to lucky numbers / avoided unlucky numbers in past month
+tb6017,Compulsions,Frequency child has repeatedly done anything else in past month
+ta7002,Mood,"She has often complained of headaches, stomach aches or sickness"
+ta7007,Mood,"She has many worries, often seems worried"
+ta7012,Mood,"She is often unhappy, down-hearted or tearful"
+ta7015,Mood,"She is nervous or clingy in new situations, easily loses confidence"
+ta7023,Mood,"She has many fears, is easily scared"
+tb8000,Externalising,In the last 6 months and compared with other children has she had severe temper tantrums?
+tb8011,Externalising,Has she argued with grown-ups?
+tb8012,Externalising,"Has she taken no notice of rules, or refused to do as she is told?"
+tb8013,Externalising,Has she seemed to do things to annoy other people on purpose?
+tb8014,Externalising,Has she blamed others for her own mistakes or bad behaviour?
+tb8015,Externalising,Has she been touchy and easily annoyed?
+tb8016,Externalising,Has she been angry and resentful?
+tb8017,Externalising,Has she been spiteful?
+tb8018,Externalising,Has she tried to get her own back on people?
