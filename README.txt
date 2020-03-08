@@ -1,4 +1,4 @@
-Title of publication: Investigating Psychopathological Comorbidity in Childhood and Adolescence using Network Analysis
+Title of Dissertation Project: Investigating Psychopathological Comorbidity in Childhood and Adolescence using Network Analysis
 
 3RD YEAR UNDERGRADUATE PSYCHOLOGY FINAL RESEARCH DISSERTATION
 
@@ -14,9 +14,9 @@ IMPORTANT: Scripts are numbered by ORDER of operation. Please run them in their 
 
 The following programs were used for this project:
 
-(1)	R
-(2)	SPSS
-(3) Rmarkdown
+(1)	    R
+(2)	    SPSS
+(3)     Rmarkdown
 
 The project folder is organised as follows:
 
