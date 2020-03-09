@@ -34,7 +34,7 @@ Contains all scripts (.R and .Rmarkdown) files used in this project.
 The files are chronologically ordered, numbered from 0 to 3, which corresponds to the order in which they are executed. The file '0_DirectoryPaths.R' contains all the pathnames of the folders that are used to access, process and analyse the data. This file is user-specific and has to be amended to indicate the pathname of the specific user.
 
 2019_Dissertation/Analysis/Settings
-Contains supplementary code used in analysis. flowerpot.R is used to filter the network by co-morbid symptom nodes. NodelistT1.csv and NodelistT2.csv contain legends used in the script to select and label data from the root ALSPAC data file. 
+Contains supplementary code used in analysis. "flowerpot.R" is used to filter the network by co-morbid symptom nodes. "NodelistT1.csv" and "NodelistT2.csv" contain legends used in the script to select and label data from the root ALSPAC data file. 
 
 NOTE: In compliance with data protection and participant confidentiality guidelines, data is not included within this project folder. 
 
